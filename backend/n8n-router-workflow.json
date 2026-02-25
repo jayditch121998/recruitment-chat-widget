@@ -1,0 +1,111 @@
+{
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "route",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ],
+            "webhookId": "router-webhook-id"
+        },
+        {
+            "parameters": {
+                "model": "gpt-4o-mini",
+                "messages": {
+                    "messageValues": [
+                        {
+                            "message": "You are an intelligent routing system for a recruitment platform. Your SOLE purpose is to classify the user's intent into exactly ONE of the pre-defined target agents.\n\nAVAILABLE AGENTS:\n1. job_description_generator\nUse this agent if the user wants to write, structure, or formalize a professional job description outlining responsibilities, qualifications, and requirements.\n\n2. job_ad_creator\nUse this agent if the user wants to create a marketing-style job advertisement meant to attract candidates with persuasive, promotional, or engaging language.\n\nRULES:\n- You must NEVER generate the actual content (description or ad).\n- You must ONLY return a JSON object containing two properties: \"agent\" (string) and \"confidence\" (number between 0.0 and 1.0).\n- If the intent is unclear, make your best guess and lower the confidence score.\n- The 'agent' MUST be exactly \"job_description_generator\" or \"job_ad_creator\". Do not output any other formatting. Do not wrap in markdown.",
+                            "role": "system"
+                        },
+                        {
+                            "message": "={{ $json.body.message }}",
+                            "role": "user"
+                        }
+                    ]
+                },
+                "jsonOutput": true
+            },
+            "name": "OpenAI Chat",
+            "type": "n8n-nodes-base.openAiChat",
+            "typeVersion": 1,
+            "position": [
+                300,
+                300
+            ],
+            "credentials": {
+                "openAiApi": {
+                    "id": "YOUR_OPENAI_CREDENTIALS_ID",
+                    "name": "OpenAI account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "mode": "runOnceForEachItem",
+                "jsCode": "try {\n  let response = $input.item.json.message.content;\n  if (typeof response === 'string') {\n    response = response.replace(/^```json/g, '').replace(/```$/g, '').trim();\n    response = JSON.parse(response);\n  }\n  const agent = (response.agent === 'job_ad_creator') ? 'job_ad_creator' : 'job_description_generator';\n  const confidence = (typeof response.confidence === 'number') ? response.confidence : 0.5;\n  return { json: { agent: agent, confidence: confidence } };\n} catch (e) {\n  return { json: { agent: 'job_description_generator', confidence: 0.1, error: 'Failed to parse LLM intent' } };\n}"
+            },
+            "name": "Parse & Validate JSON",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                500,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "respondWith": "allIncomingItems",
+                "options": {}
+            },
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                700,
+                300
+            ]
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "OpenAI Chat",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat": {
+            "main": [
+                [
+                    {
+                        "node": "Parse & Validate JSON",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Parse & Validate JSON": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
