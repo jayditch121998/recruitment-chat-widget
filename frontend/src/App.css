@@ -168,12 +168,46 @@ body {
 .message-bubble {
     max-width: 100%;
     padding: 0.75rem 1rem;
+    padding-right: 2.5rem; /* Ensure space for the copy button */
     border-radius: 18px;
     font-size: 0.95rem;
     line-height: 1.5;
     word-wrap: break-word;
     white-space: pre-line;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.copy-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s, background-color 0.2s, color 0.2s;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.message-bubble:hover .copy-button {
+    opacity: 1;
+}
+
+.copy-button:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+    color: var(--primary);
+}
+
+@media (prefers-color-scheme: dark) {
+    .copy-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
 }
 
 .message-bubble.user {
@@ -476,6 +510,56 @@ body {
     }
 }
 
+/* Workflow selection cards */
+.workflow-card {
+    padding: 20px;
+    background-color: var(--chat-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--shadow-sm);
+    flex-direction: row;
+}
+
+.workflow-card-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 90%;
+}
+
+.workflow-card-arrow {
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    transition: transform 0.2s ease, color 0.2s ease;
+    font-weight: bold;
+}
+
+.workflow-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 15px rgba(252, 75, 90, 0.15);
+}
+
+.workflow-card:hover .workflow-card-arrow {
+    transform: translateX(4px);
+    color: var(--primary);
+}
+
+@media (prefers-color-scheme: dark) {
+    .workflow-card {
+        background-color: var(--bubble-agent);
+    }
+    .workflow-card:hover {
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.35);
+    }
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 600px) {
     .chat-header {
@@ -544,5 +628,9 @@ body {
         padding: 8px 14px;
         margin: 6px 2px;
         font-size: 0.95rem;
+    }
+
+    .copy-button {
+        opacity: 0.8; /* Ensure copy button is always visible on touch devices */
     }
 }
